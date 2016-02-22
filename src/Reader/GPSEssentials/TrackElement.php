@@ -14,6 +14,7 @@ class TrackElement extends Entity
     public $distance;
     public $speed;
     public $altitude;
+    public $bearing;
     public $longitude;
     public $latitude;
     public $accuracy;
