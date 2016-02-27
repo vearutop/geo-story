@@ -25,8 +25,6 @@ class TrackElement extends Entity
     static function setUpColumns($columns)
     {
         $columns->id = Column::create(Column::AUTO_ID);
-        $columns->id->schemaName = '_id';
-
         $columns->trackId = Track::columns()->id;
 
         $columns->time = Column::INTEGER;
@@ -44,6 +42,7 @@ class TrackElement extends Entity
     static function setUpTable(\Yaoi\Database\Definition\Table $table, $columns)
     {
         $table->setSchemaName('TrackElement');
+        Column::cast($columns->id)->schemaName = '_id';
         Column::cast($columns->trackId)->schemaName = 'trackId';
     }
 
