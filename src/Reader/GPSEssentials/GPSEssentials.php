@@ -12,7 +12,24 @@ class GPSEssentials
         $this->db = new Database('sqlite:///' . $pathToSqliteDatabase);
     }
 
+
+
     public function getTracks() {
+
+
+    }
+
+    const RADIUS = 6371;
+    public static function distance(TrackElement $from, TrackElement $to) {
+        $lat1 = pi() * $from->latitude / 180;
+        $lat2 = pi() * $to->latitude / 180;
+        $long1 = pi() * $from->longitude / 180;
+        $long2 = pi() * $to->longitude / 180;
+
+        return self::RADIUS * acos(
+            sin($lat1) * sin($lat2)
+            + cos($lat1) * cos($lat2) * cos($long2 - $long1)
+        );
 
 
     }

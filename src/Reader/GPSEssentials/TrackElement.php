@@ -28,16 +28,24 @@ class TrackElement extends Entity
         $columns->id->schemaName = '_id';
 
         $columns->trackId = Track::columns()->id;
+
         $columns->time = Column::INTEGER;
         $columns->distance = Column::FLOAT;
         $columns->speed = Column::FLOAT;
         $columns->altitude = Column::FLOAT;
         $columns->bearing = Column::FLOAT;
+        $columns->longitude = Column::FLOAT;
+        $columns->latitude = Column::FLOAT;
+        $columns->accuracy = Column::FLOAT;
+        $columns->options = Column::STRING;
+        $columns->gain = Column::FLOAT;
     }
 
     static function setUpTable(\Yaoi\Database\Definition\Table $table, $columns)
     {
         $table->setSchemaName('TrackElement');
+        Column::cast($columns->trackId)->schemaName = 'trackId';
     }
+
 
 }
