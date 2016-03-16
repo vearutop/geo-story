@@ -2,6 +2,7 @@
 
 namespace GeoTool\Command;
 
+use GeoTool\BatchSaver;
 use GeoTool\Entities\Segment10;
 use GeoTool\Entities\Segment100;
 use GeoTool\Entities\Segment1k;
@@ -20,6 +21,8 @@ use Yaoi\String\Expression;
 class ReadGpsEssentials extends Command
 {
     public $path;
+    public $from;
+    public $to;
 
     static function setUpDefinition(Definition $definition, $options)
     {
@@ -27,6 +30,11 @@ class ReadGpsEssentials extends Command
             ->setDescription('Path to "Waypoints" file')
             ->setIsUnnamed()
             ->setIsRequired();
+        $options->from = Command\Option::create()->setType()
+            ->setDescription('Time from');
+
+        $options->to = Command\Option::create()->setType()
+            ->setDescription('Time to');
 
         $definition->description = 'Import GPS Essentials database (sqlite)';
         $definition->name = 'read-gps-essentials';
@@ -49,13 +57,20 @@ class ReadGpsEssentials extends Command
         $database = new Database('sqlite:///' . realpath($this->path));
         $database->log(new Log('colored-stdout'));
         TrackElement::bindDatabase($database);
-        $this->count = $database->query("SELECT COUNT(1) AS c FROM ?", TrackElement::table())->fetchRow('c');
+        //$this->count = $database->query("SELECT COUNT(1) AS c FROM ?", TrackElement::table())->fetchRow('c');
 
 
         $pageQuery = TrackElement::statement()
             ->order("? ASC", TrackElement::columns()->id)
             ->limit($this->pageSize);
 
+        if ($this->from) {
+            $pageQuery->where('? >= 1000 * ?', TrackElement::columns()->time, strtotime($this->from));
+        }
+
+        if ($this->to) {
+            $pageQuery->where('? <= 1000 * ?', TrackElement::columns()->time, strtotime($this->to));
+        }
 
         $this->segments = array(
             Segment5::className(),
@@ -68,6 +83,12 @@ class ReadGpsEssentials extends Command
         );
 
         
+
+        /** @var BatchSaver[] $batchSavers */
+        $batchSavers = array();
+        foreach ($this->segments as $segment) {
+            $batchSavers[$segment] = new BatchSaver();
+        }
 
         while ($res = $pageQuery->query()->fetchAll()) {
             /** @var TrackElement $row */
@@ -95,7 +116,8 @@ class ReadGpsEssentials extends Command
                         }
 
                         $segmentItem->elevation = $row->altitude - $lastPoint->altitude;
-                        $segmentItem->save();
+                        $batchSavers[$segment]->add($segmentItem);
+                        //$segmentItem->save();
                         $this->lastPoints[$segment] = $row;
                     }
                 }
@@ -103,6 +125,10 @@ class ReadGpsEssentials extends Command
             }
             $this->offset += $this->pageSize;
             $pageQuery->offset($this->offset);
+        }
+
+        foreach ($batchSavers as $batchSaver) {
+            $batchSaver->flush();
         }
     }
 

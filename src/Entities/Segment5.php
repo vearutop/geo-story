@@ -4,6 +4,7 @@ namespace GeoTool\Entities;
 
 
 use Yaoi\Database\Definition\Column;
+use Yaoi\Database\Definition\Index;
 use Yaoi\Database\Definition\Table;
 use Yaoi\Database\Entity;
 
@@ -25,18 +26,18 @@ class Segment5 extends Entity
     {
         $columns->id = Column::AUTO_ID;
         $columns->ut = Column::INTEGER + Column::UNSIGNED;
-        $columns->latitude = Column::FLOAT;
-        $columns->longitude = Column::FLOAT;
-        $columns->altitude = Column::FLOAT;
-        $columns->distance = Column::FLOAT;
-        $columns->elevation = Column::FLOAT;
-        $columns->speed = Column::FLOAT;
+        $columns->latitude = Column::FLOAT + Column::NOT_NULL;
+        $columns->longitude = Column::FLOAT + Column::NOT_NULL;
+        $columns->altitude = Column::FLOAT + Column::NOT_NULL;
+        $columns->distance = Column::FLOAT + Column::NOT_NULL;
+        $columns->elevation = Column::FLOAT + Column::NOT_NULL;
+        $columns->speed = Column::FLOAT + Column::NOT_NULL;
         $columns->time = Column::INTEGER + Column::UNSIGNED;
     }
 
     static function setUpTable(\Yaoi\Database\Definition\Table $table, $columns)
     {
-        // TODO: Implement setUpTable() method.
+        $table->addIndex(Index::TYPE_KEY, $columns->ut);
     }
 
 

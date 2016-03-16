@@ -1,6 +1,6 @@
 {
     "require": {
-        "php-yaoi/php-yaoi": "^1.0"
+        "php-yaoi/php-yaoi": "dev-master"
     },
     "autoload": {
         "psr-4": {
