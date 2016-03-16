@@ -5,6 +5,7 @@ namespace GeoTool\Command;
 use GeoTool\Entities\Segment10;
 use GeoTool\Entities\Segment100;
 use GeoTool\Entities\Segment10k;
+use GeoTool\Entities\Segment10s;
 use GeoTool\Entities\Segment1k;
 use GeoTool\Entities\Segment5;
 use GeoTool\Entities\Segment500;
@@ -48,11 +49,11 @@ class Export extends Command
         $utFrom = strtotime($this->from);
         $utTo = strtotime($this->to);
 
-        $cols = Segment10::columns();
+        $cols = Segment10s::columns();
 
         $pageSize = 1000;
         $offset = 0;
-        $statement = Segment10::statement()
+        $statement = Segment10s::statement()
             ->where('? >= ? AND ? <= ?', $cols->ut, $utFrom, $cols->ut, $utTo)
             ->order('? DESC', $cols->ut)
             ->limit($pageSize);
@@ -67,6 +68,9 @@ GPX;
         $out = fopen($this->out, 'w');
         fwrite($out, $head);
 
+        $hours = array();
+        $lastHour = '';
+
         date_default_timezone_set('UTC');
         do {
             $res = $statement->query()->fetchAll();
@@ -78,6 +82,17 @@ GPX;
             foreach ($res as $segment) {
                 $dateTime = date('c', $segment->ut);
                 $dateTime = substr($dateTime, 0, 19) . 'Z';
+
+                $hour = substr($dateTime, 0, 13);
+                if ($hour !== $lastHour) {
+                    $hours [$segment->ut]= array(
+                        'hour' => $dateTime,
+                        'lat' => $segment->latitude,
+                        'lon' => $segment->longitude,
+                        'speed' => $segment->speed
+                    );
+                    $lastHour = $hour;
+                }
 
                 $item = <<<GPX
 <trkpt lat="$segment->latitude" lon="$segment->longitude"><ele>$segment->elevation</ele><speed>$segment->speed</speed><time>$dateTime</time></trkpt>
@@ -94,6 +109,11 @@ GPX;
 
 
         fwrite($out, $tail);
+        date_default_timezone_set('NZ');
+        foreach ($hours as $ut => &$data) {
+            $data['local'] = date('c', $ut);
+        }
+        file_put_contents($this->out . '.json', json_encode($hours));
     }
 
 
