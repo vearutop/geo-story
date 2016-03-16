@@ -54,9 +54,16 @@ class BatchSaver
         $database = $this->table->database();
         $insert = $database->insert($this->table->schemaName);
         foreach ($this->items as $item) {
-            $insert->valuesRow($item->toArray());
+            $insert->valuesRow($item->toArray(true));
         }
-        $insert->query();
+
+        try {
+            $insert->query()->execute();
+        }
+        catch (Exception $exception) {
+            echo PHP_EOL, $exception->query, PHP_EOL;
+            throw $exception;
+        }
 
 
         $this->items = array();

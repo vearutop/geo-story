@@ -6,11 +6,13 @@ use GeoTool\Entities\Points;
 use GeoTool\Entities\Segment10;
 use GeoTool\Entities\Segment100;
 use GeoTool\Entities\Segment10k;
+use GeoTool\Entities\Segment10s;
 use GeoTool\Entities\Segment1k;
 use GeoTool\Entities\Segment5;
 use GeoTool\Entities\Segment50;
 use GeoTool\Entities\Segment500;
 use GeoTool\Entities\Segment5k;
+use GeoTool\Entities\Segment60s;
 use Yaoi\Command;
 use Yaoi\Command\Definition;
 use Yaoi\Database\Definition\Table;
@@ -41,7 +43,9 @@ class Migrate extends Command
             Segment500::table(),
             Segment1k::table(),
             Segment5k::table(),
-            Segment10k::table()
+            Segment10k::table(),
+            Segment10s::table(),
+            Segment60s::table(),
         );
 
         $log = new Log('colored-stdout');

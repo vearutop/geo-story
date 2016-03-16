@@ -5,11 +5,13 @@ namespace GeoTool\Command;
 use GeoTool\BatchSaver;
 use GeoTool\Entities\Segment10;
 use GeoTool\Entities\Segment100;
+use GeoTool\Entities\Segment10s;
 use GeoTool\Entities\Segment1k;
 use GeoTool\Entities\Segment5;
 use GeoTool\Entities\Segment500;
 use GeoTool\Entities\Segment5k;
 use GeoTool\Entities\Segment10k;
+use GeoTool\Entities\Segment60s;
 use GeoTool\Reader\GPSEssentials\GPSEssentials;
 use GeoTool\Reader\GPSEssentials\TrackElement;
 use Yaoi\Command;
@@ -82,11 +84,19 @@ class ReadGpsEssentials extends Command
             Segment10k::className(),
         );
 
+        $timeSegments = array(
+            Segment10s::className(),
+            Segment60s::className()
+        );
+
         
 
         /** @var BatchSaver[] $batchSavers */
         $batchSavers = array();
         foreach ($this->segments as $segment) {
+            $batchSavers[$segment] = new BatchSaver();
+        }
+        foreach ($timeSegments as $segment) {
             $batchSavers[$segment] = new BatchSaver();
         }
 
@@ -106,6 +116,34 @@ class ReadGpsEssentials extends Command
                         /** @var Segment5 $segmentItem */
                         $segmentItem = new $segment;
                         $segmentItem->distance = $distance;
+                        $segmentItem->latitude = $row->latitude;
+                        $segmentItem->longitude = $row->longitude;
+                        $segmentItem->ut = $row->time;
+                        $segmentItem->altitude = $row->altitude;
+                        $segmentItem->time = $row->time - $lastPoint->time;
+                        if ($segmentItem->time) {
+                            $segmentItem->speed = $segmentItem->distance / $segmentItem->time;
+                        }
+
+                        $segmentItem->elevation = $row->altitude - $lastPoint->altitude;
+                        $batchSavers[$segment]->add($segmentItem);
+                        //$segmentItem->save();
+                        $this->lastPoints[$segment] = $row;
+                    }
+                }
+
+                /** @var Segment10s|string $segment */
+                foreach ($timeSegments as $segment) {
+                    if (!isset($this->lastPoints[$segment])) {
+                        $this->lastPoints[$segment] = $row;
+                    }
+                    /** @var TrackElement $lastPoint */
+                    $lastPoint = $this->lastPoints[$segment];
+
+                    if ($row->time - $lastPoint->time > $segment::MIN_TIME) {
+                        /** @var Segment5 $segmentItem */
+                        $segmentItem = new $segment;
+                        $segmentItem->distance = GPSEssentials::distance($lastPoint, $row);
                         $segmentItem->latitude = $row->latitude;
                         $segmentItem->longitude = $row->longitude;
                         $segmentItem->ut = $row->time;

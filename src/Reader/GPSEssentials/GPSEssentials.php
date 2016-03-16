@@ -21,6 +21,10 @@ class GPSEssentials
 
     const RADIUS = 6371000; // Meters
     public static function distance(TrackElement $from, TrackElement $to) {
+        if ($from->latitude === $to->latitude && $from->longitude === $to->longitude) {
+            return 0;
+        }
+
         $lat1 = pi() * $from->latitude / 180;
         $lat2 = pi() * $to->latitude / 180;
         $long1 = pi() * $from->longitude / 180;
