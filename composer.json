@@ -4,6 +4,7 @@
     "php-yaoi/twbs": "dev-master",
     "swaggest/json-schema": "^0.7.1",
     "phperf/highcharts": "dev-master",
+    "phperf/pipeline": "dev-master",
     "eventviva/php-image-resize": "^1.6"
   },
   "scripts": {
