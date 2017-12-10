@@ -44,7 +44,7 @@ class WebApp extends Command
                 $layout->setTitle('GeoStory');
                 $layout->headScriptUrls[] = '/js/leaflet-omnivore.min.js';
                 $layout->headScriptUrls[] = '/js/mapbox.js';
-                $layout->headScriptUrls[] = '/js/timeMap.js';
+                $layout->headScriptUrls[] = '/js/timemap.js';
                 $layout->headScriptUrls[] = '/js/swipebox.js';
 
                 $layout->styleUrls[] = '/css/mapbox.css';
