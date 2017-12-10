@@ -1,5 +1,5 @@
 env/conf.php
-data
+/data
 .idea
 vendor
 *.gpx
