@@ -1,0 +1,32 @@
+web:
+    image: nginx:latest
+    ports:
+        - "8080:80"
+    volumes:
+        - .:/code
+        - ./env/site.conf:/etc/nginx/conf.d/site.conf
+        - ./data/logs:/var/log/site
+    links:
+        - php
+php:
+    build: .
+    dockerfile: docker/Dockerfile-php
+    volumes:
+        - .:/code
+    links:
+        - mysql
+mysql:
+    image: mariadb:latest
+    environment:
+        - MYSQL_ROOT_PASSWORD=password
+        - MYSQL_DATABASE=gps
+    volumes:
+        - ./data/mysql:/var/lib/mysql
+cli:
+    build: .
+    dockerfile: docker/Dockerfile-php-cli
+    volumes:
+        - .:/code
+    links:
+        - mysql
+    command: bash -c "sleep 10;/code/bin/tool migrate"

@@ -11,6 +11,7 @@ use Yaoi\Database\Entity;
 class Segment5 extends Entity
 {
     public $id;
+    public $userId;
     public $ut;
     public $latitude;
     public $longitude;
@@ -25,9 +26,10 @@ class Segment5 extends Entity
     static function setUpColumns($columns)
     {
         $columns->id = Column::AUTO_ID;
+        $columns->userId = User::columns()->id;
         $columns->ut = Column::INTEGER + Column::UNSIGNED;
-        $columns->latitude = Column::FLOAT + Column::NOT_NULL;
-        $columns->longitude = Column::FLOAT + Column::NOT_NULL;
+        $columns->latitude = Column::FLOAT + Column::NOT_NULL + Column::SIZE_8B;
+        $columns->longitude = Column::FLOAT + Column::NOT_NULL + Column::SIZE_8B;
         $columns->altitude = Column::FLOAT + Column::NOT_NULL;
         $columns->distance = Column::FLOAT + Column::NOT_NULL;
         $columns->elevation = Column::FLOAT + Column::NOT_NULL;

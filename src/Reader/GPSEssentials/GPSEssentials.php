@@ -8,19 +8,23 @@ class GPSEssentials
 {
     /** @var Database */
     private $db;
-    public function __construct($pathToSqliteDatabase) {
+
+    public function __construct($pathToSqliteDatabase)
+    {
         $this->db = new Database('sqlite:///' . $pathToSqliteDatabase);
     }
 
 
-
-    public function getTracks() {
+    public function getTracks()
+    {
 
 
     }
 
     const RADIUS = 6371000; // Meters
-    public static function distance(TrackElement $from, TrackElement $to) {
+
+    public static function distance(TrackElement $from, TrackElement $to)
+    {
         if ($from->latitude === $to->latitude && $from->longitude === $to->longitude) {
             return 0;
         }
@@ -34,11 +38,23 @@ class GPSEssentials
             sin($lat1) * sin($lat2)
             + cos($lat1) * cos($lat2) * cos($long2 - $long1)
         );
-
-
     }
 
-    public function calc() {
+    public static function rawDistance($fromLat, $fromLon, $toLat, $toLon)
+    {
+        $lat1 = pi() * $fromLat / 180;
+        $lat2 = pi() * $toLat / 180;
+        $long1 = pi() * $fromLon / 180;
+        $long2 = pi() * $toLon / 180;
+
+        return self::RADIUS * acos(
+            sin($lat1) * sin($lat2)
+            + cos($lat1) * cos($lat2) * cos($long2 - $long1)
+        );
+    }
+
+    public function calc()
+    {
         /*
          * LUA
 local EARTH_RAD = 6378137.0
@@ -83,18 +99,18 @@ end
         var d = R * c;
         */
 
-/*
-Here it is in C# (lat and long in radians):
+        /*
+        Here it is in C# (lat and long in radians):
 
-double CalculateGreatCircleDistance(double lat1, double long1, double lat2, double long2, double radius)
-{
-    return radius * Math.Acos(
-        Math.Sin(lat1) * Math.Sin(lat2)
-        + Math.Cos(lat1) * Math.Cos(lat2) * Math.Cos(long2 - long1));
-}
+        double CalculateGreatCircleDistance(double lat1, double long1, double lat2, double long2, double radius)
+        {
+            return radius * Math.Acos(
+                Math.Sin(lat1) * Math.Sin(lat2)
+                + Math.Cos(lat1) * Math.Cos(lat2) * Math.Cos(long2 - long1));
+        }
 
-If your lat and long are in degrees then divide by 180/PI to convert to radians.
-*/
+        If your lat and long are in degrees then divide by 180/PI to convert to radians.
+        */
     }
 
 }

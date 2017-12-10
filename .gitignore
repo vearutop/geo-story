@@ -2,3 +2,6 @@ env/conf.php
 data
 .idea
 vendor
+*.gpx
+/public/twbs
+/public/photo

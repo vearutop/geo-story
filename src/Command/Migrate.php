@@ -2,17 +2,22 @@
 
 namespace GeoTool\Command;
 
-use GeoTool\Entities\Points;
+use GeoTool\Entities\Event;
+use GeoTool\Entities\Photo;
+use GeoTool\Entities\Point;
 use GeoTool\Entities\Segment10;
 use GeoTool\Entities\Segment100;
 use GeoTool\Entities\Segment10k;
 use GeoTool\Entities\Segment10s;
 use GeoTool\Entities\Segment1k;
+use GeoTool\Entities\Segment30;
 use GeoTool\Entities\Segment5;
 use GeoTool\Entities\Segment50;
 use GeoTool\Entities\Segment500;
 use GeoTool\Entities\Segment5k;
 use GeoTool\Entities\Segment60s;
+use GeoTool\Entities\Story;
+use GeoTool\Entities\User;
 use Yaoi\Command;
 use Yaoi\Command\Definition;
 use Yaoi\Database\Definition\Table;
@@ -35,9 +40,10 @@ class Migrate extends Command
     {
         /** @var Table[] $tables */
         $tables = array(
-            Points::table(),
+            Point::table(),
             Segment5::table(),
             Segment10::table(),
+            Segment30::table(),
             Segment50::table(),
             Segment100::table(),
             Segment500::table(),
@@ -46,6 +52,11 @@ class Migrate extends Command
             Segment10k::table(),
             Segment10s::table(),
             Segment60s::table(),
+
+            Event::table(),
+            Photo::table(),
+            Story::table(),
+            User::table(),
         );
 
         $log = new Log('colored-stdout');

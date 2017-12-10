@@ -3,6 +3,8 @@
 namespace GeoTool\Command;
 
 use GeoTool\BatchSaver;
+use GeoTool\Entities\Event;
+use GeoTool\Entities\Point;
 use GeoTool\Entities\Segment10;
 use GeoTool\Entities\Segment100;
 use GeoTool\Entities\Segment10s;
@@ -14,6 +16,7 @@ use GeoTool\Entities\Segment10k;
 use GeoTool\Entities\Segment60s;
 use GeoTool\Reader\GPSEssentials\GPSEssentials;
 use GeoTool\Reader\GPSEssentials\TrackElement;
+use GeoTool\Reader\Importer;
 use Yaoi\Command;
 use Yaoi\Command\Definition;
 use Yaoi\Database;
@@ -48,6 +51,11 @@ class ReadGpsEssentials extends Command
     private $pageSize = 1000;
     private $segments;
     private $lastPoints = array();
+    /** @var Event */
+    private $lastEvent;
+
+    /** @var BatchSaver[] */
+    private $batchSavers;
 
     public function performAction()
     {
@@ -55,12 +63,10 @@ class ReadGpsEssentials extends Command
             throw new \Exception(Expression::create('File ? not found', $this->path));
         }
 
-        $GPSEssentials = new GPSEssentials($this->path);
         $database = new Database('sqlite:///' . realpath($this->path));
         $database->log(new Log('colored-stdout'));
         TrackElement::bindDatabase($database);
         //$this->count = $database->query("SELECT COUNT(1) AS c FROM ?", TrackElement::table())->fetchRow('c');
-
 
         $pageQuery = TrackElement::statement()
             ->order("? ASC", TrackElement::columns()->id)
@@ -74,100 +80,25 @@ class ReadGpsEssentials extends Command
             $pageQuery->where('? <= 1000 * ?', TrackElement::columns()->time, strtotime($this->to));
         }
 
-        $this->segments = array(
-            Segment5::className(),
-            Segment10::className(),
-            Segment100::className(),
-            Segment500::className(),
-            Segment1k::className(),
-            Segment5k::className(),
-            Segment10k::className(),
-        );
-
-        $timeSegments = array(
-            Segment10s::className(),
-            Segment60s::className()
-        );
-
-        
-
-        /** @var BatchSaver[] $batchSavers */
-        $batchSavers = array();
-        foreach ($this->segments as $segment) {
-            $batchSavers[$segment] = new BatchSaver();
-        }
-        foreach ($timeSegments as $segment) {
-            $batchSavers[$segment] = new BatchSaver();
-        }
+        $importer = new Importer();
 
         while ($res = $pageQuery->query()->fetchAll()) {
             /** @var TrackElement $row */
             foreach ($res as $row) {
                 $row->time /= 1000;
 
-                /** @var Segment5|string $segment */
-                foreach ($this->segments as $segment) {
-                    if (!isset($this->lastPoints[$segment])) {
-                        $this->lastPoints[$segment] = $row;
-                    }
-                    /** @var TrackElement $lastPoint */
-                    $lastPoint = $this->lastPoints[$segment];
-                    if (($distance = GPSEssentials::distance($lastPoint, $row)) > $segment::MIN_DISTANCE) {
-                        /** @var Segment5 $segmentItem */
-                        $segmentItem = new $segment;
-                        $segmentItem->distance = $distance;
-                        $segmentItem->latitude = $row->latitude;
-                        $segmentItem->longitude = $row->longitude;
-                        $segmentItem->ut = $row->time;
-                        $segmentItem->altitude = $row->altitude;
-                        $segmentItem->time = $row->time - $lastPoint->time;
-                        if ($segmentItem->time) {
-                            $segmentItem->speed = $segmentItem->distance / $segmentItem->time;
-                        }
-
-                        $segmentItem->elevation = $row->altitude - $lastPoint->altitude;
-                        $batchSavers[$segment]->add($segmentItem);
-                        //$segmentItem->save();
-                        $this->lastPoints[$segment] = $row;
-                    }
-                }
-
-                /** @var Segment10s|string $segment */
-                foreach ($timeSegments as $segment) {
-                    if (!isset($this->lastPoints[$segment])) {
-                        $this->lastPoints[$segment] = $row;
-                    }
-                    /** @var TrackElement $lastPoint */
-                    $lastPoint = $this->lastPoints[$segment];
-
-                    if ($row->time - $lastPoint->time > $segment::MIN_TIME) {
-                        /** @var Segment5 $segmentItem */
-                        $segmentItem = new $segment;
-                        $segmentItem->distance = GPSEssentials::distance($lastPoint, $row);
-                        $segmentItem->latitude = $row->latitude;
-                        $segmentItem->longitude = $row->longitude;
-                        $segmentItem->ut = $row->time;
-                        $segmentItem->altitude = $row->altitude;
-                        $segmentItem->time = $row->time - $lastPoint->time;
-                        if ($segmentItem->time) {
-                            $segmentItem->speed = $segmentItem->distance / $segmentItem->time;
-                        }
-
-                        $segmentItem->elevation = $row->altitude - $lastPoint->altitude;
-                        $batchSavers[$segment]->add($segmentItem);
-                        //$segmentItem->save();
-                        $this->lastPoints[$segment] = $row;
-                    }
-                }
-
+                $point = new Point();
+                $point->ut = $row->time;
+                $point->altitude = $row->altitude;
+                $point->accuracy = $row->accuracy;
+                $point->latitude = $row->latitude;
+                $point->longitude = $row->longitude;
+                $importer->addPoint($point);
             }
             $this->offset += $this->pageSize;
             $pageQuery->offset($this->offset);
         }
 
-        foreach ($batchSavers as $batchSaver) {
-            $batchSaver->flush();
-        }
     }
 
 

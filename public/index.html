@@ -28,12 +28,13 @@
     // - The file must either be on the same domain as the page that requests it,
     //   or both the server it is requested from and the user's browser must
     //   support CORS.
-    var runLayer = omnivore.gpx('/nz10s2.gpx')
+    var runLayer = omnivore.gpx('/out3.gpx')
         .on('ready', function() {
             map.fitBounds(runLayer.getBounds());
         })
         .addTo(map);
 
+    /*
     $.getJSON('/nz10s2.gpx.json', function(m){
         var data;
         for (var i in m) {
@@ -49,7 +50,12 @@
                 },
                 properties: {
                     title: data.hour,
-                    description: 'speed: ' + data.speed + '\nlocal:' + data.local,
+                    description:
+                    'speed: ' + data.speed
+                    + '<br>local: ' + data.local
+                    + '<br>coord: ' + data.lat + ',' + data.lon
+                    + '<br><a href="http://maps.google.com/?q='+data.lat+','+data.lon+'">gmaps</a>'
+                    ,
                     'marker-size': 'small',
                     'marker-color': '#BE9A6B'
                     //'marker-symbol': 'cafe'
@@ -57,6 +63,7 @@
             }).addTo(map);
         }
     });
+    */
 
 </script>
 
